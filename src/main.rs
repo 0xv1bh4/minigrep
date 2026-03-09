@@ -4,10 +4,8 @@ use std::process;
 use std::error::Error;
 use minigrep::{search, search_case_insensitive};
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    
-    let config = Config::new(&args).unwrap_or_else(|err| {
+fn main() {    
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing the arguements: {err}");
         process::exit(1);
     });
@@ -25,12 +23,16 @@ struct Config {
 }
 
 impl Config {
-    fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguements");
-        }
-        let query = args[1].clone();
-        let file_name = args[2].clone();
+    fn new(mut args: impl Iterator<Item = String>,) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let file_name = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get the file name"),
+        };
 
         let ignore_case = env::var("IGNORE_CASE").is_ok();
         Ok(Config {query, file_name, ignore_case})
